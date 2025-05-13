@@ -7,6 +7,15 @@ pub enum Error {
 
     #[error("Internal error: {0}")]
     InternalError(String),
+
+    #[error("HTTP Error: {0}")]
+    HTTPError(#[from] Box<reqwest::Error>),
+
+    #[error("Invalid Status Code: {0}")]
+    HTTPErrorWithStatusCode(reqwest::StatusCode),
+
+    #[error("Deserialization Error: {0}")]
+    Deserialization(String),
 }
 
 /// The result type used in this crate.

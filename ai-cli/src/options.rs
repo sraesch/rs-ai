@@ -30,11 +30,16 @@ pub struct Options {
     /// The log level
     #[arg(short, value_enum, long, default_value_t = LogLevel::Info)]
     pub log_level: LogLevel,
+
+    /// The API endpoint to use
+    #[arg(short, long, default_value = "https://openrouter.ai/api/v1/")]
+    pub api_endpoint: String,
 }
 
 impl Options {
     /// Dumps the options to the log.
     pub fn dump_to_log(&self) {
         info!("log_level: {:?}", self.log_level);
+        info!("api_endpoint: {:?}", self.api_endpoint);
     }
 }

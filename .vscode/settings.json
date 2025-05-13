@@ -3,6 +3,7 @@
     "cSpell.words": [
         "dotenv",
         "reqwest",
+        "serde",
         "thiserror"
     ]
 }

@@ -1,5 +1,6 @@
 mod options;
 
+use ai::Message;
 use anyhow::Result;
 use clap::Parser as _;
 use dotenv::dotenv;
@@ -58,6 +59,25 @@ async fn run_program() -> Result<()> {
     info!("Options:");
     options.dump_to_log();
     info!("-------");
+
+    info!("Create client...");
+    let client = ai::Client::new(api_key, options.api_endpoint.parse()?);
+    info!("Create client...Ok");
+
+    let choices = client
+        .chat_completion(
+            "openai/gpt-3.5-turbo",
+            &[Message {
+                role: "user".to_string(),
+                content: "Hello, how are you?".to_string(),
+            }],
+        )
+        .await?;
+
+    info!("Response:");
+    for choice in choices {
+        info!("{:?}", choice);
+    }
 
     Ok(())
 }
