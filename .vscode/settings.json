@@ -1,6 +1,7 @@
 {
     "editor.formatOnSave": true,
     "cSpell.words": [
+        "dotenv",
         "reqwest",
         "thiserror"
     ]

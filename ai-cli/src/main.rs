@@ -2,6 +2,7 @@ mod options;
 
 use anyhow::Result;
 use clap::Parser as _;
+use dotenv::dotenv;
 use log::{LevelFilter, error, info};
 use options::Options;
 use std::io::Write as _;
@@ -37,6 +38,22 @@ fn initialize_logging(filter: LevelFilter) {
 async fn run_program() -> Result<()> {
     let options = parse_args()?;
     initialize_logging(LevelFilter::from(options.log_level));
+
+    // Get the environment variable API_KEY
+    info!("Load API_KEY...");
+
+    if let Err(err) = dotenv() {
+        anyhow::bail!("Failed to load .env file: {}", err);
+    }
+
+    let api_key = match std::env::var("API_KEY") {
+        Ok(api_key) => api_key,
+        Err(err) => {
+            anyhow::bail!("Failed to get API_KEY: {}", err);
+        }
+    };
+
+    info!("Load API_KEY...Ok");
 
     info!("Options:");
     options.dump_to_log();
