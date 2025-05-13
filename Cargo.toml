@@ -1,0 +1,8 @@
+[workspace]
+
+members = ["ai", "ai-cli"]
+resolver = "3"
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
