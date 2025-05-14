@@ -1,10 +1,29 @@
+use schemars::schema::Schema;
 use serde::{Deserialize, Serialize};
 
 /// The request body used in the chat completion API
 #[derive(Serialize, Debug)]
-pub struct ChatCompletionRequest<'a> {
-    pub model: String,
-    pub messages: &'a [Message],
+pub struct ChatCompletionRequest<'a, 'b, 'c> {
+    pub model: &'a str,
+    pub messages: &'b [Message],
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_format: Option<&'c Schema>,
+}
+
+impl<'a, 'b, 'c> ChatCompletionRequest<'a, 'b, 'c> {
+    /// Creates a new `ChatCompletionRequest` with the given model and messages.
+    ///
+    /// # Arguments
+    /// * `model` - The model to use for the chat completion.
+    /// * `messages` - A slice of messages to send in the request.
+    pub fn new(model: &'a str, messages: &'b [Message]) -> Self {
+        Self {
+            model,
+            messages,
+            response_format: None,
+        }
+    }
 }
 
 /// Represents the response from the chat completion API.
@@ -93,5 +112,6 @@ mod test {
         "#;
 
         let response: ChatCompletionResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.id, "gen-1747167300-Qc7IgPZUPoopdSABk5KA");
     }
 }

@@ -28,10 +28,7 @@ impl Client {
     /// * `model` - The model to use for the chat completion.
     /// * `messages` - A slice of messages to send in the request.
     pub async fn chat_completion(&self, model: &str, messages: &[Message]) -> Result<Vec<Choice>> {
-        let request_body = json_types::ChatCompletionRequest {
-            model: model.to_string(),
-            messages,
-        };
+        let request_body = json_types::ChatCompletionRequest::new(model, messages);
 
         let url = self.api_url.join("chat/completions").unwrap();
         debug!("Request URL: {}", url);
