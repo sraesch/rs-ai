@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use log::{LevelFilter, info};
 
 /// Workaround for parsing the different log level
@@ -26,6 +26,7 @@ impl From<LogLevel> for LevelFilter {
 /// CLI interface for determining the pixel contribution of the geometry from all views.
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
 pub struct Options {
     /// The log level
     #[arg(short, value_enum, long, default_value_t = LogLevel::Info)]
@@ -34,6 +35,44 @@ pub struct Options {
     /// The API endpoint to use
     #[arg(short, long, default_value = "https://openrouter.ai/api/v1/")]
     pub api_endpoint: String,
+
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum Commands {
+    /// Query the LLM models available in the API
+    Models(QueryModelsArguments),
+
+    /// Giving a prompt to the LLM
+    Prompt(PromptArguments),
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct QueryModelsArguments {
+    /// Optional search string to filter the models
+    #[arg(short, long)]
+    pub search_string: Option<String>,
+
+    /// Filter for models that support structured output
+    #[arg(short = 'c', long, default_value_t = false)]
+    pub structured_output: bool,
+
+    /// Show the pricing information for the models
+    #[arg(short = 'p', long, default_value_t = false)]
+    pub show_pricing: bool,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct PromptArguments {
+    /// The prompt to send to the LLM
+    #[arg(short, long)]
+    pub prompt: String,
+
+    /// The model to use for the prompt
+    #[arg(short, long)]
+    pub model: String,
 }
 
 impl Options {

@@ -1,17 +1,21 @@
 mod error;
+mod models;
+
 pub mod json_types;
 
 pub use error::*;
 use json_types::ResponseFormat;
 pub use json_types::{ChatCompletionResponse, Choice, JsonSchemaDescription, Message, Usage};
+pub use models::*;
 
 use log::debug;
 use reqwest::Url;
 
 pub struct Client {
-    pub api_key: String,
-    pub api_url: Url,
-    pub client: reqwest::Client,
+    api_key: String,
+    api_url: Url,
+    client: reqwest::Client,
+    models: Option<LLMModels>,
 }
 
 impl Client {
@@ -33,7 +37,47 @@ impl Client {
             api_key,
             api_url,
             client,
+            models: None,
         })
+    }
+
+    /// Returns a reference onto the models.
+    /// If the models are not loaded, it fetches them from the API.
+    pub async fn get_models(&mut self) -> Result<&LLMModels> {
+        let not_loaded = self.models.is_none();
+
+        // If models are not loaded, fetch them from the API
+        if not_loaded {
+            let url = self.api_url.join("models").unwrap();
+            debug!("Request URL: {}", url);
+            let response = self.client.get(url).send().await.map_err(|e| {
+                log::error!("Request failed: {}", e);
+                Error::HTTPError(Box::new(e))
+            })?;
+
+            if response.status().is_success() {
+                let response_body = response.text().await.map_err(|e| {
+                    log::error!("Failed to read response body: {}", e);
+                    Error::HTTPError(Box::new(e))
+                })?;
+
+                debug!("Response body: {}", response_body);
+                let response = serde_json::from_str::<JsonModels>(&response_body).map_err(|e| {
+                    log::error!("Failed to parse response: {}", e);
+                    Error::Deserialization(e.to_string())
+                })?;
+
+                self.models = Some(LLMModels::new(response));
+
+                Ok(self.models.as_ref().unwrap())
+            } else {
+                log::error!("Request failed with status: {}", response.status());
+                Err(Error::HTTPErrorWithStatusCode(response.status()))
+            }
+        } else {
+            // If models are already loaded, return them
+            Ok(self.models.as_ref().unwrap())
+        }
     }
 
     /// Sends a chat completion request to the API.
