@@ -11,6 +11,7 @@ use reqwest::Url;
 pub struct Client {
     pub api_key: String,
     pub api_url: Url,
+    pub client: reqwest::Client,
 }
 
 impl Client {
@@ -19,8 +20,20 @@ impl Client {
     /// # Arguments
     /// * `api_key` - The API key to authenticate requests.
     /// * `api_url` - The base URL for the API.
-    pub fn new(api_key: String, api_url: Url) -> Self {
-        Self { api_key, api_url }
+    pub fn new(api_key: String, api_url: Url) -> Result<Self> {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(|e| {
+                log::error!("Failed to create HTTP client: {}", e);
+                Error::HTTPError(Box::new(e))
+            })?;
+
+        Ok(Self {
+            api_key,
+            api_url,
+            client,
+        })
     }
 
     /// Sends a chat completion request to the API.
@@ -34,8 +47,8 @@ impl Client {
 
         let url = self.api_url.join("chat/completions").unwrap();
         debug!("Request URL: {}", url);
-        let client = reqwest::Client::new();
-        let response = client
+        let response = self
+            .client
             .post(url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .json(&request_body)

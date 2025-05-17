@@ -4,7 +4,7 @@ use ai::{JsonSchemaDescription, Message};
 use anyhow::Result;
 use clap::Parser as _;
 use dotenv::dotenv;
-use log::{LevelFilter, error, info};
+use log::{LevelFilter, debug, error, info};
 use options::Options;
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Serialize};
@@ -83,7 +83,7 @@ async fn run_program() -> Result<()> {
     info!("-------");
 
     info!("Create client...");
-    let client = ai::Client::new(api_key, options.api_endpoint.parse()?);
+    let client = ai::Client::new(api_key, options.api_endpoint.parse()?)?;
     info!("Create client...Ok");
 
     let schema = schema_for!(LLMList);
@@ -94,7 +94,7 @@ async fn run_program() -> Result<()> {
         schema,
     };
 
-    println!(
+    debug!(
         "JSON Schema: {}",
         serde_json::to_string_pretty(&json_schema)?
     );
