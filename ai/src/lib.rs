@@ -1,9 +1,12 @@
 mod error;
+mod models;
+
 pub mod json_types;
 
 pub use error::*;
 use json_types::ResponseFormat;
 pub use json_types::{ChatCompletionResponse, Choice, JsonSchemaDescription, Message, Usage};
+pub use models::*;
 
 use log::debug;
 use reqwest::Url;
