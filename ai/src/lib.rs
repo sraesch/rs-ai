@@ -41,6 +41,8 @@ impl Client {
         })
     }
 
+    /// Returns a reference onto the models.
+    /// If the models are not loaded, it fetches them from the API.
     pub async fn get_models(&mut self) -> Result<&LLMModels> {
         let not_loaded = self.models.is_none();
 
@@ -76,8 +78,6 @@ impl Client {
             // If models are already loaded, return them
             Ok(self.models.as_ref().unwrap())
         }
-
-        // We can safely unwrap here because we just checked if models are loaded
     }
 
     /// Sends a chat completion request to the API.
