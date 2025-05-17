@@ -1,4 +1,4 @@
-use schemars::schema::Schema;
+use schemars::schema::RootSchema;
 use serde::{Deserialize, Serialize};
 
 /// The request body used in the chat completion API
@@ -8,10 +8,24 @@ pub struct ChatCompletionRequest<'a, 'b, 'c> {
     pub messages: &'b [Message],
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub response_format: Option<&'c Schema>,
+    pub response_format: Option<ResponseFormat<'c>>,
 }
 
-impl<'a, 'b, 'c> ChatCompletionRequest<'a, 'b, 'c> {
+#[derive(Serialize, Debug)]
+pub struct ResponseFormat<'a> {
+    #[serde(rename = "type")]
+    pub schema_type: &'static str,
+    pub json_schema: Option<&'a JsonSchemaDescription>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct JsonSchemaDescription {
+    pub name: String,
+    pub strict: bool,
+    pub schema: RootSchema,
+}
+
+impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_> {
     /// Creates a new `ChatCompletionRequest` with the given model and messages.
     ///
     /// # Arguments

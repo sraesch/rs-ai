@@ -1,17 +1,39 @@
 mod options;
 
-use ai::Message;
+use ai::{JsonSchemaDescription, Message};
 use anyhow::Result;
 use clap::Parser as _;
 use dotenv::dotenv;
 use log::{LevelFilter, error, info};
 use options::Options;
+use schemars::{JsonSchema, schema_for};
+use serde::{Deserialize, Serialize};
 use std::io::Write as _;
 
 /// Parses the program arguments and returns None, if no arguments were provided and Some otherwise.
 fn parse_args() -> Result<Options> {
     let options = Options::parse();
     Ok(options)
+}
+
+#[derive(JsonSchema, Serialize, Deserialize, Debug)]
+#[schemars(deny_unknown_fields)]
+struct Llm {
+    /// The name of the LLM
+    pub name: String,
+
+    /// The company or entity that is responsible for the LLM
+    pub company: String,
+
+    /// A short description of the LLM
+    pub description: String,
+}
+
+#[derive(JsonSchema, Serialize, Deserialize, Debug)]
+#[schemars(deny_unknown_fields)]
+struct LLMList {
+    /// A list of LLMs
+    pub list: Vec<Llm>,
 }
 
 /// Initializes the program logging
@@ -64,19 +86,36 @@ async fn run_program() -> Result<()> {
     let client = ai::Client::new(api_key, options.api_endpoint.parse()?);
     info!("Create client...Ok");
 
+    let schema = schema_for!(LLMList);
+
+    let json_schema = JsonSchemaDescription {
+        name: "LLM".to_string(),
+        strict: true,
+        schema,
+    };
+
+    println!(
+        "JSON Schema: {}",
+        serde_json::to_string_pretty(&json_schema)?
+    );
+
     let choices = client
-        .chat_completion(
-            "openai/gpt-3.5-turbo",
+        .chat_completion_structured(
+            "openai/gpt-4.1",
             &[Message {
                 role: "user".to_string(),
-                content: "Hello, how are you?".to_string(),
+                content: "Name a few LLMs".to_string(),
             }],
+            &json_schema,
         )
         .await?;
 
     info!("Response:");
-    for choice in choices {
-        info!("{:?}", choice);
+    for choice in choices.iter() {
+        let llm: LLMList = serde_json::from_str(&choice.message.content).unwrap();
+        for (index, l) in llm.list.iter().enumerate() {
+            info!("{}: {:?}", index, l);
+        }
     }
 
     Ok(())
