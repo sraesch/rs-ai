@@ -49,6 +49,9 @@ dependencies = [
  "dotenv",
  "env_logger",
  "log",
+ "schemars",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
