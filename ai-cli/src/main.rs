@@ -1,39 +1,17 @@
 mod options;
 
-use ai::{JsonSchemaDescription, Message};
+use ai::Message;
 use anyhow::Result;
 use clap::Parser as _;
 use dotenv::dotenv;
-use log::{LevelFilter, debug, error, info};
-use options::Options;
-use schemars::{JsonSchema, schema_for};
-use serde::{Deserialize, Serialize};
+use log::{LevelFilter, error, info};
+use options::{Commands, Options};
 use std::io::Write as _;
 
 /// Parses the program arguments and returns None, if no arguments were provided and Some otherwise.
 fn parse_args() -> Result<Options> {
     let options = Options::parse();
     Ok(options)
-}
-
-#[derive(JsonSchema, Serialize, Deserialize, Debug)]
-#[schemars(deny_unknown_fields)]
-struct Llm {
-    /// The name of the LLM
-    pub name: String,
-
-    /// The company or entity that is responsible for the LLM
-    pub company: String,
-
-    /// A short description of the LLM
-    pub description: String,
-}
-
-#[derive(JsonSchema, Serialize, Deserialize, Debug)]
-#[schemars(deny_unknown_fields)]
-struct LLMList {
-    /// A list of LLMs
-    pub list: Vec<Llm>,
 }
 
 /// Initializes the program logging
@@ -83,39 +61,72 @@ async fn run_program() -> Result<()> {
     info!("-------");
 
     info!("Create client...");
-    let client = ai::Client::new(api_key, options.api_endpoint.parse()?)?;
+    let mut client = ai::Client::new(api_key, options.api_endpoint.parse()?)?;
     info!("Create client...Ok");
 
-    let schema = schema_for!(LLMList);
+    match options.command {
+        Commands::Models(models_options) => {
+            command_list_models(&mut client, &models_options).await?;
+        }
+        Commands::Prompt(prompt_options) => {
+            command_prompt(&mut client, &prompt_options).await?;
+        }
+    }
 
-    let json_schema = JsonSchemaDescription {
-        name: "LLM".to_string(),
-        strict: true,
-        schema,
+    Ok(())
+}
+
+/// The command to list the models available in the API
+///
+/// # Arguments
+/// * `client` - The client to use for the API requests.
+/// * `models_options` - The options for the command.
+async fn command_list_models(
+    client: &mut ai::Client,
+    models_options: &options::QueryModelsArguments,
+) -> Result<()> {
+    let models = client.get_models().await?;
+
+    for model in models.get_models() {
+        if let Some(search_string) = &models_options.search_string {
+            if !model.name.to_lowercase().contains(search_string) {
+                continue;
+            }
+        }
+
+        if models_options.structured_output
+            && !model.supported_parameters.contains("structured_outputs")
+        {
+            continue;
+        }
+
+        println!("Model: {}", model.name);
+        println!("  ID: {}", model.id);
+        println!("  Context length: {}", model.context_length);
+
+        if models_options.show_pricing {
+            println!("  Pricing: {}", model.pricing);
+        }
+    }
+
+    Ok(())
+}
+
+async fn command_prompt(
+    client: &mut ai::Client,
+    prompt_options: &options::PromptArguments,
+) -> Result<()> {
+    let prompt = Message {
+        role: "user".to_string(),
+        content: prompt_options.prompt.clone(),
     };
 
-    debug!(
-        "JSON Schema: {}",
-        serde_json::to_string_pretty(&json_schema)?
-    );
-
-    let choices = client
-        .chat_completion_structured(
-            "openai/gpt-4.1",
-            &[Message {
-                role: "user".to_string(),
-                content: "Name a few LLMs".to_string(),
-            }],
-            &json_schema,
-        )
+    let response = client
+        .chat_completion(&prompt_options.model, &[prompt])
         .await?;
 
-    info!("Response:");
-    for choice in choices.iter() {
-        let llm: LLMList = serde_json::from_str(&choice.message.content).unwrap();
-        for (index, l) in llm.list.iter().enumerate() {
-            info!("{}: {:?}", index, l);
-        }
+    for choice in response {
+        println!("Response: {}", choice.message.content);
     }
 
     Ok(())
