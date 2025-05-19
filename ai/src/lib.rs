@@ -1,16 +1,22 @@
 mod error;
 mod models;
+mod tools;
 
 pub mod json_types;
 
 pub use error::*;
 use json_types::ResponseFormat;
-pub use json_types::{ChatCompletionResponse, Choice, JsonSchemaDescription, Message, Usage};
+pub use json_types::{
+    ChatCompletionResponse, Choice, JsonFunctionInfo, JsonSchemaDescription, JsonTool, Message,
+    Usage,
+};
 pub use models::*;
+pub use tools::*;
 
 use log::debug;
 use reqwest::Url;
 
+/// A client for interacting with the LLM API.
 pub struct Client {
     api_key: String,
     api_url: Url,

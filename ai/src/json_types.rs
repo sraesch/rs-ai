@@ -7,6 +7,9 @@ pub struct ChatCompletionRequest<'a, 'b, 'c> {
     pub model: &'a str,
     pub messages: &'b [Message],
 
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub tools: Vec<JsonTool>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_format: Option<ResponseFormat<'c>>,
 }
@@ -36,6 +39,7 @@ impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_> {
             model,
             messages,
             response_format: None,
+            tools: Vec::new(),
         }
     }
 }
@@ -85,6 +89,33 @@ pub struct Choice {
     pub finish_reason: String,
     pub native_finish_reason: String,
     pub message: Message,
+}
+
+/// Represents a tool used in the chat completion request.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JsonTool {
+    /// The type of tool. Must be "function".
+    #[serde(rename = "type")]
+    pub tool_type: String,
+
+    /// The function definition of the tool.
+    pub function: JsonFunctionInfo,
+}
+
+/// The function definition for a tool.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JsonFunctionInfo {
+    /// The name of the function.
+    pub name: String,
+
+    /// The description of the function.
+    pub description: String,
+
+    /// The parameters for the function.
+    pub strict: bool,
+
+    /// The parameters for the function.
+    pub parameters: RootSchema,
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use ai::{JsonSchemaDescription, json_types::ResponseFormat};
-use schemars::{JsonSchema, schema_for};
+use schemars::{JsonSchema, r#gen::SchemaSettings};
 use serde::{Deserialize, Serialize};
 
 #[derive(JsonSchema, Serialize, Deserialize, Debug, PartialEq)]
@@ -15,6 +15,10 @@ struct Weather {
 
     /// Weather conditions description
     pub conditions: String,
+
+    /// Optionally, the humidity level in percentage
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub humidity: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -47,40 +51,19 @@ struct HelperJsonSchemaProperty {
     pub description: String,
 }
 
-const REFERENCE: &str = r#"{
-    "type": "json_schema",
-    "json_schema": {
-      "name": "weather",
-      "strict": true,
-      "schema": {
-        "type": "object",
-        "properties": {
-          "location": {
-            "type": "string",
-            "description": "City or location name"
-          },
-          "temperature": {
-            "type": "number",
-            "description": "Temperature in Celsius"
-          },
-          "conditions": {
-            "type": "string",
-            "description": "Weather conditions description"
-          }
-        },
-        "required": ["location", "temperature", "conditions"],
-        "additionalProperties": false
-      }
-    }
-  }"#;
-
 #[test]
 fn test_schema() {
     // load reference json
-    let reference: HelperStruct = serde_json::from_str(REFERENCE).unwrap();
+    let reference_str = include_str!("../test_data/struct_output_request.json");
+    let reference: HelperStruct = serde_json::from_str(reference_str).unwrap();
 
     // define JSON schema using the `schemars` crate
-    let schema = schema_for!(Weather);
+    let settings = SchemaSettings::default().with(|s| {
+        s.option_add_null_type = false;
+    });
+    let generator = settings.into_generator();
+    let schema = generator.into_root_schema_for::<Weather>();
+
     let json_schema = JsonSchemaDescription {
         name: "weather".to_string(),
         strict: true,
