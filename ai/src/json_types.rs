@@ -80,6 +80,28 @@ pub struct Usage {
 pub struct Message {
     pub role: String,
     pub content: String,
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub tool_calls: Vec<JsonToolCall>,
+}
+
+/// Represents a tool call in the message.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JsonToolCall {
+    pub index: i64,
+    pub id: String,
+    pub r#type: String,
+
+    #[serde(rename = "function")]
+    pub function_call: JsonFunctionCall,
+}
+
+/// Represents a function call in the tool call.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JsonFunctionCall {
+    pub name: String,
+    pub arguments: String,
 }
 
 /// Represents a single choice in the chat completion response.

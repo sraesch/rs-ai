@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use ai::Tool;
+use ai::{ChatCompletionResponse, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -64,7 +64,7 @@ pub struct WeatherParameter {
 }
 
 #[test]
-fn test_tool() {
+fn test_tool_request_encoding() {
     // load reference json
     let weather_tool_str = include_str!("../test_data/weather_tool.json");
     let reference: HelperJsonTool = serde_json::from_str(weather_tool_str).unwrap();
@@ -83,4 +83,32 @@ fn test_tool() {
     let deserialized_tool: HelperJsonTool = serde_json::from_str(&tool_json).unwrap();
 
     assert_eq!(reference, deserialized_tool);
+}
+
+#[test]
+fn test_tool_response_decoding() {
+    // load reference json
+    let weather_tool_response_str = include_str!("../test_data/weather_tool_response.json");
+    let weather_tool_response: ChatCompletionResponse =
+        serde_json::from_str(weather_tool_response_str).unwrap();
+
+    assert_eq!(weather_tool_response.choices.len(), 1);
+
+    let choice = &weather_tool_response.choices[0];
+    assert_eq!(choice.finish_reason, "tool_calls");
+
+    let message = &choice.message;
+    assert_eq!(message.role, "assistant");
+
+    assert_eq!(message.tool_calls.len(), 1);
+
+    let tool_call = &message.tool_calls[0];
+    assert_eq!(tool_call.index, 0);
+    assert_eq!(tool_call.id, "call_L8RNjCRpMAxGkCAy5ovJxkw9");
+    assert_eq!(tool_call.r#type, "function");
+    assert_eq!(tool_call.function_call.name, "get_weather");
+    assert_eq!(
+        tool_call.function_call.arguments,
+        "{\"location\":\"London, United Kingdom\"}"
+    );
 }

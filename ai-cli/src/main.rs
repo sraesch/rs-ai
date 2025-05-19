@@ -119,6 +119,7 @@ async fn command_prompt(
     let prompt = Message {
         role: "user".to_string(),
         content: prompt_options.prompt.clone(),
+        tool_calls: vec![],
     };
 
     let response = client
