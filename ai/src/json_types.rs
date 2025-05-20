@@ -3,18 +3,18 @@ use serde::{Deserialize, Serialize};
 
 /// The request body used in the chat completion API
 #[derive(Serialize, Debug)]
-pub struct ChatCompletionRequest<'a, 'b, 'c> {
+pub struct ChatCompletionRequest<'a, 'b, 'c, 'd> {
     pub model: &'a str,
     pub messages: &'b [Message],
 
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub tools: Vec<JsonTool>,
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    pub tools: &'d [JsonTool],
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_format: Option<ResponseFormat<'c>>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct ResponseFormat<'a> {
     #[serde(rename = "type")]
     pub schema_type: &'static str,
@@ -28,7 +28,10 @@ pub struct JsonSchemaDescription {
     pub schema: RootSchema,
 }
 
-impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_> {
+/// Represents the response format for the chat completion request.
+const EMPTY_TOOLS: [JsonTool; 0] = [];
+
+impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_, '_> {
     /// Creates a new `ChatCompletionRequest` with the given model and messages.
     ///
     /// # Arguments
@@ -39,7 +42,7 @@ impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_> {
             model,
             messages,
             response_format: None,
-            tools: Vec::new(),
+            tools: &EMPTY_TOOLS,
         }
     }
 }

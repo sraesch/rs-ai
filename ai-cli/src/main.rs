@@ -122,9 +122,17 @@ async fn command_prompt(
         tool_calls: vec![],
     };
 
-    let response = client
-        .chat_completion(&prompt_options.model, &[prompt])
-        .await?;
+    let prompt_parameters =
+        ai::ChatCompletionParameter::new(prompt_options.model.clone(), vec![prompt]);
+
+    let response = client.chat_completion(&prompt_parameters).await?;
+
+    for choice in response {
+        println!("Response: {}", choice.message.content);
+    }
+
+    Ok(())
+}
 
     for choice in response {
         println!("Response: {}", choice.message.content);

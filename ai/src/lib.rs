@@ -11,9 +11,10 @@ pub use json_types::{
     Usage,
 };
 pub use models::*;
+use schemars::JsonSchema;
 pub use tools::*;
 
-use log::debug;
+use log::{debug, log_enabled, trace};
 use reqwest::Url;
 
 /// A client for interacting with the LLM API.
@@ -90,13 +91,29 @@ impl Client {
     /// Returns a vector of messages as the response.
     ///
     /// # Arguments
-    /// * `model` - The model to use for the chat completion.
-    /// * `messages` - A slice of messages to send in the request.
-    pub async fn chat_completion(&self, model: &str, messages: &[Message]) -> Result<Vec<Choice>> {
-        let request_body = json_types::ChatCompletionRequest::new(model, messages);
+    /// * `parameter` - The parameter for the chat completion request.
+    pub async fn chat_completion(
+        &self,
+        parameter: &ChatCompletionParameter<'_>,
+    ) -> Result<Vec<Choice>> {
+        let mut request_body = json_types::ChatCompletionRequest::new(
+            parameter.model.as_str(),
+            parameter.messages.as_ref(),
+        );
 
+        request_body.response_format = parameter.response_format.clone();
+        request_body.tools = parameter.tools.as_ref();
+
+        // create the url for the request
         let url = self.api_url.join("chat/completions").unwrap();
         debug!("Request URL: {}", url);
+
+        // if log level is set to trace, print the request body
+        if log_enabled!(log::Level::Trace) {
+            let request_body_str = serde_json::to_string_pretty(&request_body).unwrap();
+            trace!("Request body: {}", request_body_str);
+        }
+
         let response = self
             .client
             .post(url)
@@ -128,57 +145,53 @@ impl Client {
             Err(Error::HTTPErrorWithStatusCode(response.status()))
         }
     }
+}
 
-    /// Sends a chat completion request to the API.
-    /// Returns a vector of messages as the response.
+/// The parameter for a a chat completion request.
+pub struct ChatCompletionParameter<'a> {
+    model: String,
+    messages: Vec<Message>,
+    response_format: Option<ResponseFormat<'a>>,
+    tools: Vec<JsonTool>,
+}
+
+impl<'a> ChatCompletionParameter<'a> {
+    /// Creates a new `ChatCompletionRequest` with the given model and messages.
     ///
     /// # Arguments
     /// * `model` - The model to use for the chat completion.
     /// * `messages` - A slice of messages to send in the request.
-    /// * `json_schema`- The JSON schema to use for the response format.
-    pub async fn chat_completion_structured(
-        &self,
-        model: &str,
-        messages: &[Message],
-        json_schema: &JsonSchemaDescription,
-    ) -> Result<Vec<Choice>> {
-        let mut request_body = json_types::ChatCompletionRequest::new(model, messages);
-        request_body.response_format = Some(ResponseFormat {
-            schema_type: "json_schema",
-            json_schema: Some(json_schema),
-        });
-
-        let url = self.api_url.join("chat/completions").unwrap();
-        debug!("Request URL: {}", url);
-        let client = reqwest::Client::new();
-        let response = client
-            .post(url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(&request_body)
-            .send()
-            .await
-            .map_err(|e| {
-                log::error!("Request failed: {}", e);
-                Error::HTTPError(Box::new(e))
-            })?;
-
-        if response.status().is_success() {
-            let response_body = response.text().await.map_err(|e| {
-                log::error!("Failed to read response body: {}", e);
-                Error::HTTPError(Box::new(e))
-            })?;
-
-            debug!("Response body: {}", response_body);
-            let response =
-                serde_json::from_str::<ChatCompletionResponse>(&response_body).map_err(|e| {
-                    log::error!("Failed to parse response: {}", e);
-                    Error::Deserialization(e.to_string())
-                })?;
-
-            Ok(response.choices)
-        } else {
-            log::error!("Request failed with status: {}", response.status());
-            Err(Error::HTTPErrorWithStatusCode(response.status()))
+    pub fn new(model: String, messages: Vec<Message>) -> Self {
+        Self {
+            model,
+            messages,
+            response_format: None,
+            tools: Vec::new(),
         }
+    }
+
+    /// Sets the response format for the chat completion request.
+    ///
+    /// # Arguments
+    /// * `response_format` - The response format to use.
+    pub fn set_response_format(&mut self, response_format: ResponseFormat<'a>) {
+        self.response_format = Some(response_format);
+    }
+
+    /// Appends another message to the request.
+    ///
+    /// # Arguments
+    /// * `message` - The message to append.
+    pub fn add_message(&mut self, message: Message) {
+        self.messages.push(message);
+    }
+
+    /// Appends a tool to the request.
+    ///
+    /// # Arguments
+    /// * `tool` - The tool to append.
+    pub fn add_tool<P: JsonSchema>(&mut self, tool: Tool<P>) {
+        let json_tool = tool.into_json();
+        self.tools.push(json_tool);
     }
 }
