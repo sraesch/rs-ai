@@ -62,6 +62,10 @@ pub struct QueryModelsArguments {
     #[arg(short = 'c', long, default_value_t = false)]
     pub structured_output: bool,
 
+    /// Filter for models that support function calling
+    #[arg(short = 'f', long, default_value_t = false)]
+    pub function_calling: bool,
+
     /// Show the pricing information for the models
     #[arg(short = 'p', long, default_value_t = false)]
     pub show_pricing: bool,

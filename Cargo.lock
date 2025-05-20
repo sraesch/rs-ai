@@ -49,6 +49,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "log",
+ "reqwest",
  "schemars",
  "serde",
  "serde_json",

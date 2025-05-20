@@ -14,6 +14,9 @@ pub enum Error {
     #[error("Invalid Status Code: {0}")]
     HTTPErrorWithStatusCode(reqwest::StatusCode),
 
+    #[error("Bad Request: {0}")]
+    BadRequest(String),
+
     #[error("Deserialization Error: {0}")]
     Deserialization(String),
 }

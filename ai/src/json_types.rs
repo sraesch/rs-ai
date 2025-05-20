@@ -79,10 +79,14 @@ pub struct Usage {
 }
 
 /// Represents a message in the chat completion request/response.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
     pub role: String,
     pub content: String,
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub tool_call_id: String,
 
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -90,7 +94,7 @@ pub struct Message {
 }
 
 /// Represents a tool call in the message.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsonToolCall {
     pub index: i64,
     pub id: String,
@@ -101,7 +105,7 @@ pub struct JsonToolCall {
 }
 
 /// Represents a function call in the tool call.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsonFunctionCall {
     pub name: String,
     pub arguments: String,

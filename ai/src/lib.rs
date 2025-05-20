@@ -15,7 +15,7 @@ use schemars::JsonSchema;
 pub use tools::*;
 
 use log::{debug, log_enabled, trace};
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 /// A client for interacting with the LLM API.
 pub struct Client {
@@ -141,6 +141,16 @@ impl Client {
 
             Ok(response.choices)
         } else {
+            if response.status() == StatusCode::BAD_REQUEST {
+                let response_body = response.text().await.map_err(|e| {
+                    log::error!("Failed to read response body: {}", e);
+                    Error::HTTPError(Box::new(e))
+                })?;
+
+                log::error!("Response body: {}", response_body);
+                return Err(Error::BadRequest(response_body));
+            }
+
             log::error!("Request failed with status: {}", response.status());
             Err(Error::HTTPErrorWithStatusCode(response.status()))
         }
