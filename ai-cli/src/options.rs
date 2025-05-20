@@ -47,6 +47,9 @@ pub enum Commands {
 
     /// Giving a prompt to the LLM
     Prompt(PromptArguments),
+
+    /// A simple test command to check if the tool API is working
+    Weather(WeatherArguments),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -70,6 +73,13 @@ pub struct PromptArguments {
     #[arg(short, long)]
     pub prompt: String,
 
+    /// The model to use for the prompt
+    #[arg(short, long)]
+    pub model: String,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct WeatherArguments {
     /// The model to use for the prompt
     #[arg(short, long)]
     pub model: String,
