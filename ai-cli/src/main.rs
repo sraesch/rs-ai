@@ -219,7 +219,7 @@ async fn command_weather(
 
     let tool_call = &response[0].message.tool_calls[0];
     let weather_func_call: WeatherParameter =
-        serde_json::from_str(&tool_call.function_call.arguments).unwrap();
+        serde_json::from_str(&tool_call.function_call.arguments)?;
     info!("Tool call: {:?}", tool_call);
     let result = get_weather(&weather_func_call).await?;
     info!("Weather result: {:?}", result);

@@ -144,7 +144,7 @@ pub struct JsonFunctionInfo {
     /// The description of the function.
     pub description: String,
 
-    /// The parameters for the function.
+    /// If strict is true, the function must be called with all required parameters.
     pub strict: bool,
 
     /// The parameters for the function.
