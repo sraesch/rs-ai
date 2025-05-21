@@ -10,6 +10,9 @@ pub struct ChatCompletionRequest<'a, 'b, 'c, 'd> {
     #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub tools: &'d [JsonTool],
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<ToolChoice>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_format: Option<ResponseFormat<'c>>,
 }
@@ -41,6 +44,7 @@ impl<'a, 'b> ChatCompletionRequest<'a, 'b, '_, '_> {
         Self {
             model,
             messages,
+            tool_choice: None,
             response_format: None,
             tools: &EMPTY_TOOLS,
         }
@@ -147,6 +151,35 @@ pub struct JsonFunctionInfo {
     pub parameters: RootSchema,
 }
 
+/// Represents the choice of tool to be used in the chat completion request.
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ToolChoice {
+    #[serde(rename = "auto")]
+    Auto,
+
+    #[serde(rename = "required")]
+    Required,
+
+    #[serde(untagged)]
+    Function(ToolChoiceFunction),
+}
+
+/// Represents a function choice in the tool.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ToolChoiceFunction {
+    /// Must be "function".
+    pub r#type: String,
+
+    /// The function definition of the tool.
+    pub function: ToolChoiceFunctionDesc,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ToolChoiceFunctionDesc {
+    /// The name of the function.
+    pub name: String,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -187,5 +220,37 @@ mod test {
 
         let response: ChatCompletionResponse = serde_json::from_str(json).unwrap();
         assert_eq!(response.id, "gen-1747167300-Qc7IgPZUPoopdSABk5KA");
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct MyStruct {
+        pub tool_choice: ToolChoice,
+    }
+
+    #[test]
+    fn test_encoding_tool_choice() {
+        let tool_choice = ToolChoice::Auto;
+        let json = serde_json::to_string(&MyStruct { tool_choice }).unwrap();
+        assert_eq!(json, r#"{"tool_choice":"auto"}"#,);
+
+        let tool_choice = ToolChoice::Required;
+        let json = serde_json::to_string(&MyStruct { tool_choice }).unwrap();
+        assert_eq!(json, r#"{"tool_choice":"required"}"#,);
+    }
+
+    #[test]
+    fn test_encoding_tool_choice_function() {
+        let tool_choice = ToolChoice::Function(ToolChoiceFunction {
+            r#type: "function".to_string(),
+            function: ToolChoiceFunctionDesc {
+                name: "get_weather".to_string(),
+            },
+        });
+
+        let json = serde_json::to_string(&MyStruct { tool_choice }).unwrap();
+        assert_eq!(
+            json,
+            r#"{"tool_choice":{"type":"function","function":{"name":"get_weather"}}}"#,
+        );
     }
 }

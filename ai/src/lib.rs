@@ -8,7 +8,7 @@ pub use error::*;
 use json_types::ResponseFormat;
 pub use json_types::{
     ChatCompletionResponse, Choice, JsonFunctionInfo, JsonSchemaDescription, JsonTool, Message,
-    Usage,
+    ToolChoice, Usage,
 };
 pub use models::*;
 use schemars::JsonSchema;
@@ -163,6 +163,7 @@ pub struct ChatCompletionParameter<'a> {
     messages: Vec<Message>,
     response_format: Option<ResponseFormat<'a>>,
     tools: Vec<JsonTool>,
+    tool_choice: Option<ToolChoice>,
 }
 
 impl<'a> ChatCompletionParameter<'a> {
@@ -177,6 +178,7 @@ impl<'a> ChatCompletionParameter<'a> {
             messages,
             response_format: None,
             tools: Vec::new(),
+            tool_choice: None,
         }
     }
 
@@ -203,5 +205,26 @@ impl<'a> ChatCompletionParameter<'a> {
     pub fn add_tool<P: JsonSchema>(&mut self, tool: Tool<P>) {
         let json_tool = tool.into_json();
         self.tools.push(json_tool);
+    }
+
+    /// Sets the tool choice for the request.
+    ///
+    /// # Arguments
+    /// * `tool_choice` - The tool choice to set.
+    pub fn set_tool_choice(&mut self, tool_choice: ToolChoice) -> Result<()> {
+        if let ToolChoice::Function(f) = &tool_choice {
+            // check if the specified function is in the tools
+            if !self
+                .tools
+                .iter()
+                .any(|tool| tool.function.name == f.function.name)
+            {
+                return Err(Error::ToolNotFound(f.function.name.clone()));
+            }
+        }
+
+        self.tool_choice = Some(tool_choice);
+
+        Ok(())
     }
 }

@@ -105,6 +105,10 @@ async fn command_list_models(
             continue;
         }
 
+        if models_options.tool_choice && !model.supported_parameters.contains("tool_choice") {
+            continue;
+        }
+
         if models_options.function_calling && !model.supported_parameters.contains("tools") {
             continue;
         }
@@ -201,6 +205,8 @@ async fn command_weather(
 
     let mut prompt_parameters =
         ai::ChatCompletionParameter::new(prompt_options.model.clone(), vec![prompt]);
+
+    prompt_parameters.set_tool_choice(ai::ToolChoice::Required)?;
 
     prompt_parameters.add_tool(ai::Tool::<WeatherParameter>::new(
         "get_weather".to_string(),

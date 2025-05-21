@@ -17,6 +17,9 @@ pub enum Error {
     #[error("Bad Request: {0}")]
     BadRequest(String),
 
+    #[error("Tool not found: {0}")]
+    ToolNotFound(String),
+
     #[error("Deserialization Error: {0}")]
     Deserialization(String),
 }

@@ -66,6 +66,10 @@ pub struct QueryModelsArguments {
     #[arg(short = 'f', long, default_value_t = false)]
     pub function_calling: bool,
 
+    /// Filter for models that support tool choices
+    #[arg(short = 't', long, default_value_t = false)]
+    pub tool_choice: bool,
+
     /// Show the pricing information for the models
     #[arg(short = 'p', long, default_value_t = false)]
     pub show_pricing: bool,
