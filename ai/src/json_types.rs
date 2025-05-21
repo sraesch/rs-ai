@@ -152,7 +152,7 @@ pub struct JsonFunctionInfo {
 }
 
 /// Represents the choice of tool to be used in the chat completion request.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ToolChoice {
     #[serde(rename = "auto")]
     Auto,
@@ -165,7 +165,7 @@ pub enum ToolChoice {
 }
 
 /// Represents a function choice in the tool.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ToolChoiceFunction {
     /// Must be "function".
     pub r#type: String,
@@ -174,7 +174,7 @@ pub struct ToolChoiceFunction {
     pub function: ToolChoiceFunctionDesc,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ToolChoiceFunctionDesc {
     /// The name of the function.
     pub name: String,

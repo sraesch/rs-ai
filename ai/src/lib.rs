@@ -103,6 +103,7 @@ impl Client {
 
         request_body.response_format = parameter.response_format.clone();
         request_body.tools = parameter.tools.as_ref();
+        request_body.tool_choice = parameter.tool_choice.clone();
 
         // create the url for the request
         let url = self.api_url.join("chat/completions").unwrap();

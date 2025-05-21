@@ -231,6 +231,7 @@ async fn command_weather(
         tool_calls: vec![],
     });
 
+    prompt_parameters.set_tool_choice(ai::ToolChoice::Auto)?;
     let response = client.chat_completion(&prompt_parameters).await?;
 
     for choice in response {
