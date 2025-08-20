@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use ai::{JsonSchemaDescription, json_types::ResponseFormat};
-use schemars::{JsonSchema, r#gen::SchemaSettings};
+use schemars::{JsonSchema, generate::SchemaSettings, transform::AddNullable};
 use serde::{Deserialize, Serialize};
 
 #[derive(JsonSchema, Serialize, Deserialize, Debug, PartialEq)]
@@ -58,9 +58,7 @@ fn test_schema() {
     let reference: HelperStruct = serde_json::from_str(reference_str).unwrap();
 
     // define JSON schema using the `schemars` crate
-    let settings = SchemaSettings::default().with(|s| {
-        s.option_add_null_type = false;
-    });
+    let settings = SchemaSettings::default().with_transform(AddNullable::default());
     let generator = settings.into_generator();
     let schema = generator.into_root_schema_for::<Weather>();
 

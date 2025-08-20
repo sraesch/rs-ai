@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use schemars::{JsonSchema, r#gen::SchemaSettings, schema::RootSchema};
+use schemars::Schema;
+use schemars::transform::AddNullable;
+use schemars::{JsonSchema, generate::SchemaSettings};
 
 use crate::{JsonFunctionInfo, JsonTool};
 
@@ -48,10 +50,8 @@ impl<P: JsonSchema> Tool<P> {
 }
 
 /// Creates a JSON schema for the given type `P`.
-pub fn create_parameters_schema<P: JsonSchema>() -> RootSchema {
-    let settings = SchemaSettings::default().with(|s| {
-        s.option_add_null_type = false;
-    });
+pub fn create_parameters_schema<P: JsonSchema>() -> Schema {
+    let settings = SchemaSettings::default().with_transform(AddNullable::default());
     let generator = settings.into_generator();
     generator.into_root_schema_for::<P>()
 }

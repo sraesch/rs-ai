@@ -1,4 +1,4 @@
-use schemars::schema::RootSchema;
+use schemars::Schema;
 use serde::{Deserialize, Serialize};
 
 /// The request body used in the chat completion API
@@ -28,7 +28,7 @@ pub struct ResponseFormat<'a> {
 pub struct JsonSchemaDescription {
     pub name: String,
     pub strict: bool,
-    pub schema: RootSchema,
+    pub schema: Schema,
 }
 
 /// Represents the response format for the chat completion request.
@@ -148,7 +148,7 @@ pub struct JsonFunctionInfo {
     pub strict: bool,
 
     /// The parameters for the function.
-    pub parameters: RootSchema,
+    pub parameters: Schema,
 }
 
 /// Represents the choice of tool to be used in the chat completion request.
