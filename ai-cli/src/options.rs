@@ -47,6 +47,9 @@ pub enum Commands {
 
     /// Giving a prompt to the LLM
     Prompt(PromptArguments),
+
+    /// A simple test command to check if the tool API is working
+    Weather(WeatherArguments),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -59,6 +62,14 @@ pub struct QueryModelsArguments {
     #[arg(short = 'c', long, default_value_t = false)]
     pub structured_output: bool,
 
+    /// Filter for models that support function calling
+    #[arg(short = 'f', long, default_value_t = false)]
+    pub function_calling: bool,
+
+    /// Filter for models that support tool choices
+    #[arg(short = 't', long, default_value_t = false)]
+    pub tool_choice: bool,
+
     /// Show the pricing information for the models
     #[arg(short = 'p', long, default_value_t = false)]
     pub show_pricing: bool,
@@ -70,6 +81,13 @@ pub struct PromptArguments {
     #[arg(short, long)]
     pub prompt: String,
 
+    /// The model to use for the prompt
+    #[arg(short, long)]
+    pub model: String,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct WeatherArguments {
     /// The model to use for the prompt
     #[arg(short, long)]
     pub model: String,
