@@ -2,9 +2,8 @@ name: "Rust Actions"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
 
 jobs:
   check:
@@ -53,7 +52,7 @@ jobs:
           profile: "minimal"
           toolchain: "stable"
           override: true
-          
+
       - run: "rustup component add rustfmt"
 
       - uses: "actions-rs/cargo@v1"
