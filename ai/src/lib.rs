@@ -78,8 +78,14 @@ impl Client {
 
                 Ok(self.models.as_ref().unwrap())
             } else {
-                log::error!("Request failed with status: {}", response.status());
-                Err(Error::HTTPErrorWithStatusCode(response.status()))
+                let status = response.status();
+                let response_message = response.text().await.unwrap_or_default();
+                log::error!(
+                    "Request failed (status={}): Message={}",
+                    status,
+                    response_message
+                );
+                Err(Error::HTTPErrorWithStatusCode(status))
             }
         } else {
             // If models are already loaded, return them
@@ -152,8 +158,14 @@ impl Client {
                 return Err(Error::BadRequest(response_body));
             }
 
-            log::error!("Request failed with status: {}", response.status());
-            Err(Error::HTTPErrorWithStatusCode(response.status()))
+            let status = response.status();
+            let response_message = response.text().await.unwrap_or_default();
+            log::error!(
+                "Request failed (status={}): Message={}",
+                status,
+                response_message
+            );
+            Err(Error::HTTPErrorWithStatusCode(status))
         }
     }
 }

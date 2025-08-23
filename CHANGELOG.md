@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Better Error Messages**: Log error message details including status and response body
+
 ## [0.1.0] - 2025-05-17
 
 ### Added
