@@ -31,9 +31,14 @@ impl Client {
     /// # Arguments
     /// * `api_key` - The API key to authenticate requests.
     /// * `api_url` - The base URL for the API.
-    pub fn new(api_key: String, api_url: Url) -> Result<Self> {
+    /// * `timeout` - The timeout duration for API requests.
+    pub fn new_with_timeout(
+        api_key: String,
+        api_url: Url,
+        timeout: std::time::Duration,
+    ) -> Result<Self> {
         let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(timeout)
             .build()
             .map_err(|e| {
                 log::error!("Failed to create HTTP client: {}", e);
@@ -46,6 +51,16 @@ impl Client {
             client,
             models: None,
         })
+    }
+
+    /// Creates a new `Client` instance with the given API key and URL.
+    /// Note: The timeout duration for API requests is set to 30 seconds.
+    ///
+    /// # Arguments
+    /// * `api_key` - The API key to authenticate requests.
+    /// * `api_url` - The base URL for the API.
+    pub fn new(api_key: String, api_url: Url) -> Result<Self> {
+        Self::new_with_timeout(api_key, api_url, std::time::Duration::from_secs(30))
     }
 
     /// Returns a reference onto the models.
