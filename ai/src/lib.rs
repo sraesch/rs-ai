@@ -135,7 +135,7 @@ impl Client {
 
         if response.status().is_success() {
             let response_body = response.text().await.map_err(|e| {
-                log::error!("Failed to read response body: {}", e);
+                log::error!("Failed to read response body: {:?}", e);
                 Error::HTTPError(Box::new(e))
             })?;
 
