@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Better Error Messages**: Log error message details including status and response body
+- **Example for Structured Output**: Added example for structured output in AI responses
 
 ## [0.1.0] - 2025-05-17
 
